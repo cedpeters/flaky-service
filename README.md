@@ -76,14 +76,14 @@ The building and deployment process of Flaky.dev has been automated using Cloud 
 * One pipeline builds our API container and deploys it to Cloud Run
 * One pipeline builds the frontend and deploys it to Firebase Hosting
 
-The following environment variables need to be set within the Cloud Run service:
+The following environment variables need to be set within the Cloud Run service directly from the Google Cloud Platform console:
 
 * HEAD\_COLLECTION = name of head Firestore collection
 * FLAKY\_DB\_PROJECT = name of Google Cloud Project with access to Firestore
 * CLIENT\_ID = name of secret GitHub Client ID for authentication
 * CLIENT\_SECRET = name of GitHub Client Secret for authentication
 
-The following substitutions need to be set within the API Cloud Build Trigger:
+The following substitutions need to be set within the API Cloud Build Trigger directly from the Google Cloud Platform console:
 
 * \_API\_CONTAINER = name of API Cloud Run container
 * \_PROJECT\_ID = name of Google Cloud Project using Cloud Run
