@@ -12,17 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {environment} from '../../../environments/environment';
+import {Component, OnInit} from '@angular/core';
 
-interface ApiLinks {
-  get: {
-    repositories: string;
-  };
+@Component({
+  selector: 'app-license',
+  templateUrl: './license.component.html',
+  styleUrls: ['./license.component.css'],
+})
+export class LicenseComponent implements OnInit {
+  ngOnInit(): void {}
 }
-
-const apiBaseLink = environment.baseUrl + '/api/';
-export const apiLinks: ApiLinks = {
-  get: {
-    repositories: apiBaseLink + 'repo',
-  },
-};
