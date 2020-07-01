@@ -69,6 +69,29 @@ are generated from a central template. To edit one of these files, make an edit
 to its template in this
 [directory](https://github.com/googleapis/synthtool/tree/master/synthtool/gcp/templates/node_library).
 
+## Deployment
+
+The building and deployment process of Flaky.dev has been automated using Cloud Build triggers.  The build steps are outlined in the following two files: `cloudbuild-api.yaml` located in `packages/api` and `couldbuild-frontend.yaml` located in `packages/frontend`.  We have implemented a two-pipeline deployment process:
+
+* One pipeline builds our API container and deploys it to Cloud Run
+* One pipeline builds the frontend and deploys it to Firebase Hosting
+
+The following environment variables need to be set within the Cloud Run service:
+
+* HEAD\_COLLECTION = name of head Firestore collection
+* FLAKY\_DB\_PROJECT = name of Google Cloud Project with access to Firestore
+* CLIENT\_ID = name of secret GitHub Client ID for authentication
+* CLIENT\_SECRET = name of GitHub Client Secret for authentication
+
+The following substitutions need to be set within the API Cloud Build Trigger:
+
+* \_API\_CONTAINER = name of API Cloud Run container
+* \_PROJECT\_ID = name of Google Cloud Project using Cloud Run
+
+The following substituion needs to be set within the frontend Cloud Build Trigger:
+
+* \_PROJECT\_ID = name of Googleee Cloud Project using Firebase Hosting
+
 ## License
 
 Apache Version 2.0
