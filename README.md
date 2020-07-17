@@ -71,7 +71,12 @@ to its template in this
 
 ## Deployment
 
-The building and deployment process of Flaky.dev has been automated using Cloud Build triggers.  The build steps are outlined in the following two files: `cloudbuild-api.yaml` located in `packages/api` and `couldbuild-frontend.yaml` located in `packages/frontend`.  We have implemented a two-pipeline deployment process:
+The building and deployment process of Flaky.dev has been automated using Cloud Build triggers.  The build steps are outlined in the following files: 
+* [`packages/api/cloudbuild-api.yaml`](./packages/api/cloudbuild-api.yaml) for building the API container
+* ['packages/frontend/deployment/staging/cloudbuild-frontend.yaml'](./packages/frontend/deployment/staging/cloudbuild-frontend.yaml) for building the frontend staging environment
+* ['packages/frontend/deployment/production/cloudbuild-frontend-prod.yaml'](./packages/frontend/deployment/production/cloudbuild-frontend-prod.yaml) for building the frontend production environment
+
+We have implemented a two-pipeline deployment process:
 
 * One pipeline builds our API container and deploys it to Cloud Run
 * One pipeline builds the frontend and deploys it to Firebase Hosting
