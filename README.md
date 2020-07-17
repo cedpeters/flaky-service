@@ -88,7 +88,7 @@ The following environment variables need to be set within the Cloud Run service 
 * CLIENT\_ID = name of secret GitHub Client ID for authentication
 * CLIENT\_SECRET = name of GitHub Client Secret for authentication
 
-The following substitutions need to be set within the API Cloud Build Trigger directly from the Google Cloud Platform console:
+The following [substitutions](https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values) need to be set within the API Cloud Build Trigger directly from the Google Cloud Platform console:
 
 * \_API\_CONTAINER = name of API Cloud Run container
 * \_PROJECT\_ID = name of Google Cloud Project using Cloud Run
@@ -96,6 +96,10 @@ The following substitutions need to be set within the API Cloud Build Trigger di
 The following substituion needs to be set within the frontend Cloud Build Trigger:
 
 * \_PROJECT\_ID = name of Googleee Cloud Project using Firebase Hosting
+
+#### Staging Environment
+
+If you would like to use our staging environment, push your changes to override the `firebase-cloudrun-deployment` branch.  As long as the `packages/frontend/deployment/` folder is unchanged, the build process will be automated and you will be able to view your changes on the following site: [flaky-dev-staging.web.app](https://flaky-dev-staging.web.app).
 
 ## License
 
