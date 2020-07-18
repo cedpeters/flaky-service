@@ -18,6 +18,9 @@ inputs:
   filepath:
     description: 'location of the testing file'
     required: true
+  endpoint:
+    description: 'post url'
+    required: false
 
 runs:
   using: 'node12'
