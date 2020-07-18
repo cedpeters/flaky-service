@@ -201,7 +201,7 @@ async function main() {
         core.getInput('filepath'), 'utf8');
 
     const sendMe = {type: fileType, data: data, metadata: metaData};
-    const endpoint = core.getInput('os') || 'https://flaky-dashboard.web.app/api/build'
+    const endpoint = core.getInput('endpoint') || 'https://flaky-dashboard.web.app/api/build'
     const outcome = await fetch(endpoint, {
       method: 'POST',
       body: JSON.stringify(sendMe),
