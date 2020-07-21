@@ -43,6 +43,13 @@ function listifySnapshot (snapshot) {
 async function addBuild (testCases, buildInfo, client, collectionName = 'repositories-fake') {
   var dbRepo = client.collection(collectionName).doc(buildInfo.repoId);
 
+  // if this build has already been posted, skip
+  const thisBuildExists = await dbRepo.collection('builds').doc(buildInfo.buildId).get();
+  if (thisBuildExists.exists) {
+    console.log('skipping because build already exists');
+    return;
+  }
+
   // if this build is not the most recent build, than update test cases based on ALL repos, update build info based on RPREVIOUS builds, and ignore repo
   let mostRecent = true;
   let prevMostRecent = await dbRepo.collection('builds').orderBy('timestamp', 'desc').limit(1).get();
@@ -61,6 +68,9 @@ async function addBuild (testCases, buildInfo, client, collectionName = 'reposit
   repoUpdate.url = buildInfo.url;
   repoUpdate.repoId = decodeURIComponent(buildInfo.repoId);
   repoUpdate.name = buildInfo.name;
+  repoUpdate.description = buildInfo.description;
+  repoUpdate.lastupdate = buildInfo.timestamp;
+
   repoUpdate.lower = {
     repoId: decodeURIComponent(buildInfo.repoId).toLowerCase(),
     name: buildInfo.name.toLowerCase(),
@@ -77,6 +87,7 @@ async function addBuild (testCases, buildInfo, client, collectionName = 'reposit
 
   var failures = {};
   var successes = [];
+  var alltests = [];
 
   let flakyBuild = 0; // if a flaky test has failed this time
   let flakyRepo = 0; // if any test is marked as flaky (could have been successes for last 5 runs)
@@ -120,20 +131,37 @@ async function addBuild (testCases, buildInfo, client, collectionName = 'reposit
     }
     updateObj.percentpassing = testCaseAnalytics.computePassingPercent();
     updateObj.flaky = testCaseAnalytics.computeIsFlaky();
+    updateObj.passed = testCaseAnalytics.isCurrentlyPassing();
+    updateObj.searchindex = (updateObj.flaky) ? 1 : 0;
+    if (!updateObj.passed) {
+      updateObj.searchindex = 2; // higher number appears first in test view
+    }
+    updateObj.lastupdate = testCaseAnalytics.getLastUpdate();
+    updateObj.name = testCase.name;
+    updateObj.lifetimepasscount = (testCase.successful) ? Firestore.FieldValue.increment(1) : Firestore.FieldValue.increment(0);
+    updateObj.lifetimefailcount = (testCase.successful) ? Firestore.FieldValue.increment(0) : Firestore.FieldValue.increment(1);
     await dbRepo.collection('tests').doc(testCase.encodedName).update(updateObj, { merge: true });
 
     // update information for flakybuild and flakyrepo;
     flakyBuild = (buildtestCaseAnalytics.computeIsFlaky() && !testCase.successful) ? 1 + flakyBuild : flakyBuild;
     flakyRepo = (updateObj.flaky) ? 1 + flakyRepo : flakyRepo;
+    alltests.push({
+      name: testCase.name,
+      passed: testCase.successful,
+      flaky: updateObj.flaky,
+      percentpassing: updateObj.percentpassing,
+      status: testCase.successful ? 'OK' : testCase.failureMessage
+    });
   }
 
   // For the Builds
   await dbRepo.collection('builds').doc(buildInfo.buildId).set({
     percentpassing: buildPassingPercent(successes, failures),
+    passcount: successes.length,
+    failcount: Object.keys(failures).length,
     environment: buildInfo.environment,
     timestamp: buildInfo.timestamp,
-    successes: successes,
-    failures: failures,
+    tests: alltests,
     sha: decodeURIComponent(buildInfo.sha),
     buildId: decodeURIComponent(buildInfo.buildId),
     flaky: flakyBuild

@@ -21,6 +21,9 @@ import {
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {RepoListComponent} from './repo-list.component';
 import {Repository} from 'src/app/services/search/interfaces';
+import {AppRoutingModule} from 'src/app/routing/app-routing.module';
+import {MatDialogModule} from '@angular/material/dialog';
+import {HttpClientModule} from '@angular/common/http';
 
 describe('RepoListComponent', () => {
   let component: RepoListComponent;
@@ -39,7 +42,13 @@ describe('RepoListComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [RepoListComponent],
-      imports: [BrowserAnimationsModule, MatPaginatorModule],
+      imports: [
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        MatPaginatorModule,
+        HttpClientModule,
+        MatDialogModule,
+      ],
     }).compileComponents();
   }));
 
@@ -67,7 +76,7 @@ describe('RepoListComponent', () => {
 
     component.repositories = mockRepositories;
 
-    expect(component._repositories).toEqual(mockRepositories);
+    expect(component._elements).toEqual(mockRepositories);
     // reset the index
     expect(component.pageIndex).toEqual(0);
     // didn't change the page size

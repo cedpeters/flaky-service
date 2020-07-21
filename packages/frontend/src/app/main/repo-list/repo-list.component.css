@@ -28,7 +28,12 @@ limitations under the License.
     margin-top: 5px;
     padding: 5px;
     background-color: #fefefe;
+    cursor: pointer;
 }
+.repo:hover {
+    background-color: #f8f8f8;
+}
+
 .flaky-repo {
     background-color: #fff4e0;
 }
@@ -40,15 +45,10 @@ limitations under the License.
     display: inline-block;
 }
 
-.names {
+.name {
     margin-right: 10px;
-}
-.names > a {
     color: #0075FF;
     text-decoration: none;
-}
-.names > a:hover {
-    text-decoration: underline;
 }
 
 .description {
@@ -60,8 +60,18 @@ td {
     text-align: center;
 }
 
-.test-count, .test-label {
-    color: dimgrey;
+.indicator {
+    padding-right: 6px;
+}
+
+.passing-tests-indicator {
+    color: #009a06;
+}
+.failing-tests-indicator {
+    color: red;
+}
+.flaky-tests-indicator {
+    color: orange;
 }
 
 .last-update {

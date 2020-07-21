@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<div id="input-container">
+<div id="input-container" *ngIf="showSearchBar">
     <mat-icon aria-hidden="false" aria-label="search" id="search-icon">search</mat-icon>
 
     <input
         #searchInput
         matInput
-        placeholder="search an organisation or a repository"
+        placeholder="Find a repository"
         id="search-input"
         [formControl]="inputControl"
         [matAutocomplete]="auto"

@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Component, OnInit} from '@angular/core';
+import {RouteProvider} from './RouteProvider';
 
-@Component({
-  selector: 'app-single-repository',
-  templateUrl: './single-repository.component.html',
-  styleUrls: ['./single-repository.component.css'],
-})
-export class SingleRepositoryComponent implements OnInit {
-  constructor() {}
+describe('RouteProvider', () => {
+  it('should return a route link corresponding to the provided parameters', () => {
+    const orgName = 'org';
+    const repoName = 'repo';
 
-  ngOnInit(): void {}
-}
+    expect(RouteProvider.routes.main.link(orgName)).toEqual('org/' + orgName);
+    expect(RouteProvider.routes.repo.link(orgName, repoName)).toEqual(
+      'org/' + orgName + '/' + repoName
+    );
+  });
+});

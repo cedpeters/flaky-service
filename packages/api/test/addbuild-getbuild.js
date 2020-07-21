@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const { describe, it, after, before } = require('mocha');
-const { Firestore } = require('@google-cloud/firestore');
+const { describe, it, before } = require('mocha');
 const assert = require('assert');
 const { v4: uuidv4 } = require('uuid');
+const client = require('../src/firestore.js');
+const firebaseEncode = require('../lib/firebase-encode');
 
 const TestCaseRun = require('../lib/testrun');
 const addBuild = require('../src/add-build');
-const fetch = require('node-fetch');
+const { deleteTest, deleteRepo } = require('../lib/deleter');
 
+const fetch = require('node-fetch');
 const TESTING_COLLECTION_BASE = 'repositories-testsuite-';
 
 // The three builds that will be added
@@ -44,7 +46,8 @@ const buildInfo = [
       new TestCaseRun('not ok', 2, 'a/2'),
       new TestCaseRun('ok', 3, 'a/3'),
       new TestCaseRun('not ok', 4, 'a/4')
-    ]
+    ],
+    description: 'nodejs repository'
   },
   {
     repoId: encodeURIComponent('nodejs/node'),
@@ -63,7 +66,8 @@ const buildInfo = [
     testCases: [
       new TestCaseRun('ok', 1, 'a/1'),
       new TestCaseRun('ok', 2, 'a/2') // this test is now passing
-    ]
+    ],
+    description: 'nodejs repository'
   },
   {
     repoId: encodeURIComponent('nodejs/node'),
@@ -82,17 +86,13 @@ const buildInfo = [
     testCases: [
       new TestCaseRun('not ok', 1, 'a/5'),
       new TestCaseRun('not ok', 2, 'a/2') // this test is now passing
-    ]
+    ],
+    description: 'nodejs repository'
   }
 ];
 
 describe('Add-Build', () => {
-  let client;
-
   before(async () => {
-    client = new Firestore({
-      projectId: process.env.FLAKY_DB_PROJECT || 'flaky-dev-development'
-    });
     global.headCollection = TESTING_COLLECTION_BASE + uuidv4(); // random collection name for concurrent testing
   });
 
@@ -104,10 +104,13 @@ describe('Add-Build', () => {
       const organization = await client.collection(global.headCollection).doc(buildInfo[0].repoId).get();
       assert.strictEqual(organization.data().organization, buildInfo[0].organization);
       assert.strictEqual(organization.data().url, buildInfo[0].url);
+      assert.strictEqual(organization.data().description, buildInfo[0].description);
 
       // ensure builds were uploaded correctly
       const builds = await client.collection(global.headCollection).doc(buildInfo[0].repoId).collection('builds').doc(buildInfo[0].buildId).get();
       assert.strictEqual(builds.data().percentpassing, 0.5);
+      assert.strictEqual(builds.data().passcount, 2);
+      assert.strictEqual(builds.data().failcount, 2);
       assert.deepStrictEqual(builds.data().environment, buildInfo[0].environment);
     });
 
@@ -117,10 +120,13 @@ describe('Add-Build', () => {
       // ensure repository was initialized
       const organization = await client.collection(global.headCollection).doc(buildInfo[1].repoId).get();
       assert.strictEqual(organization.data().url, buildInfo[1].url);
+      assert.strictEqual(organization.data().description, buildInfo[1].description);
 
       // ensure builds were uploaded correctly
       const builds = await client.collection(global.headCollection).doc(buildInfo[1].repoId).collection('builds').doc(buildInfo[1].buildId).get();
       assert.strictEqual(builds.data().percentpassing, 1.0);
+      assert.strictEqual(builds.data().passcount, 2);
+      assert.strictEqual(builds.data().failcount, 0);
       assert.deepStrictEqual(builds.data().environment, buildInfo[1].environment);
     });
 
@@ -225,32 +231,41 @@ describe('Add-Build', () => {
     });
   });
 
-  describe('GetBuildHandler', async () => {
+  describe('GetRepoHandler', async () => {
     it('Can get limit and sort by date', async () => {
-      const resp = await fetch('http://localhost:3000/api/repo/nodejs/node?limit=1');
+      const resp = await fetch('http://localhost:3000/api/repo/nodejs/node/builds?limit=1');
+      const respMeta = await fetch('http://localhost:3000/api/repo/nodejs/node');
 
       const respText = await resp.text();
-      const sol = '[{"buildId": "33333","sha": "789","flaky": 0, "percentpassing":0,"successes":[],"failures":{"a%2F2":"TODO ERROR MESSAGE, (e.g. stackoverflow error line 13)","a%2F5":"TODO ERROR MESSAGE, (e.g. stackoverflow error line 13)"},"environment":{"matrix":{"node-version":"12.0"},"os":"linux-banana","tag":"xyz","ref":"master"}}]';
+      const respTextMeta = await respMeta.text();
 
       const ansObj = JSON.parse(respText).builds;
-      delete ansObj[0].timestamp;
-      assert.deepStrictEqual(ansObj, JSON.parse(sol));
 
-      const solMeta = { name: 'node', repoId: 'nodejs/node', organization: 'nodejs', numfails: 2, flaky: 0, numtestcases: 2, lower: { name: 'node', repoId: 'nodejs/node', organization: 'nodejs' }, environments: { matrix: [{ 'node-version': '12.0' }], os: ['linux-apple', 'linux-banana'], tag: ['abc', 'xyz'], ref: ['master'] }, url: 'https://github.com/nodejs/node' };
+      assert.strictEqual(ansObj.length, 1);
+      assert.strictEqual(ansObj[0].buildId, '33333');
+      assert.strictEqual(ansObj[0].percentpassing, 0);
+      assert.strictEqual(ansObj[0].tests.length, 2);
 
-      assert.deepStrictEqual(JSON.parse(respText).metadata, solMeta);
+      const solMeta = { name: 'node', repoId: 'nodejs/node', description: 'nodejs repository', organization: 'nodejs', numfails: 2, flaky: 0, numtestcases: 2, lower: { name: 'node', repoId: 'nodejs/node', organization: 'nodejs' }, environments: { matrix: [{ 'node-version': '12.0' }], os: ['linux-apple', 'linux-banana'], tag: ['abc', 'xyz'], ref: ['master'] }, url: 'https://github.com/nodejs/node' };
+      const solActual = JSON.parse(respTextMeta);
+      delete solActual.lastupdate;
+      assert.deepStrictEqual(solActual, solMeta);
     });
 
     it('Can use random combinations of queries', async () => {
-      const resp = await fetch('http://localhost:3000/api/repo/nodejs/node?os=linux-banana&matrix={%22node-version%22:%2212.0%22}');
+      const resp = await fetch('http://localhost:3000/api/repo/nodejs/node/builds?os=linux-banana&matrix={%22node-version%22:%2212.0%22}');
       const respText = await resp.text();
 
-      const sol = '[{"buildId": "33333","sha": "789","flaky": 0, "percentpassing":0,"successes":[],"failures":{"a%2F2":"TODO ERROR MESSAGE, (e.g. stackoverflow error line 13)","a%2F5":"TODO ERROR MESSAGE, (e.g. stackoverflow error line 13)"},"environment":{"matrix":{"node-version":"12.0"},"os":"linux-banana","tag":"xyz","ref":"master"}},{"buildId": "22222","sha": "456","flaky": 0,"percentpassing":1,"successes":["a%2F1","a%2F2"],"failures":{},"environment":{"matrix":{"node-version":"12.0"},"os":"linux-banana","tag":"xyz","ref":"master"}}]';
-
       const ansObj = JSON.parse(respText).builds;
-      delete ansObj[0].timestamp;
-      delete ansObj[1].timestamp;
-      assert.deepStrictEqual(ansObj, JSON.parse(sol));
+
+      assert.strictEqual(ansObj.length, 2);
+      assert.strictEqual(ansObj[0].buildId, '33333');
+      assert.strictEqual(ansObj[0].percentpassing, 0);
+      assert.strictEqual(ansObj[0].tests.length, 2);
+
+      assert.strictEqual(ansObj[1].buildId, '22222');
+      assert.strictEqual(ansObj[1].percentpassing, 1);
+      assert.strictEqual(ansObj[1].tests.length, 2);
     });
   });
 
@@ -295,6 +310,24 @@ describe('Add-Build', () => {
       assert('error' in ansObj);
       assert.strictEqual(resp.status, 404);
     });
+
+    it('Can return all tests in the right order', async () => {
+      const resp = await fetch('http://localhost:3000/api/repo/nodejs/node/tests');
+      const respText = await resp.text();
+      const ansObj = JSON.parse(respText).tests;
+
+      assert(ansObj[0].name === 'a/5' || ansObj[0].name === 'a/2'); // both failed on most recent build
+      assert(ansObj[1].name === 'a/5' || ansObj[1].name === 'a/2'); // both failed on most recent build
+
+      assert(ansObj[2].name === 'a/4'); // failed on build before the last build
+
+      assert(ansObj[3].name === 'a/3' || ansObj[3].name === 'a/1'); // both failed on most recent build
+      assert(ansObj[4].name === 'a/3' || ansObj[4].name === 'a/1'); // both failed on most recent build
+
+      // make sure their are the newly added fields
+      assert.strictEqual(ansObj[2].lifetimepasscount, 0);
+      assert.strictEqual(ansObj[2].lifetimefailcount, 1);
+    });
   });
 
   describe('GetBuildHandler', async () => {
@@ -328,26 +361,26 @@ describe('Add-Build', () => {
     });
   });
 
-  after(async () => {
-    // must delete each collection individually
-    const deletePaths = [
-      'tests/{testcase}/runs/{buildid}',
-      'tests/{testcase}',
-      'builds/{buildid}'
-    ];
-    const buildIds = ['11111', '22222', '33333'];
-    const testCases = ['a/1', 'a/2', 'a/3', 'a/4', 'a/5', 'a/6'];
-    // Delete all possible documents, okay to delete document that doesnt exist
-    for (let a = 0; a < deletePaths.length; a++) {
-      for (let b = 0; b < buildIds.length; b++) {
-        for (let c = 0; c < testCases.length; c++) {
-          const { deletePath, buildId, testCase } = { deletePath: deletePaths[a], buildId: buildIds[b], testCase: testCases[c] };
-          const deletePathUse = deletePath.replace('{testcase}', encodeURIComponent(testCase)).replace('{buildid}', buildId);
-          await client.collection(global.headCollection).doc(buildInfo[0].repoId + '/' + deletePathUse).delete();
-        }
-      }
-    }
+  describe('deleter', async () => {
+    it('Can delete a particular test', async () => {
+      await deleteTest(client, decodeURIComponent(buildInfo[0].repoId), 'a/1');
 
-    await client.collection(global.headCollection).doc(buildInfo[0].repoId).delete();
+      // make sure that test is no longer there
+      const testDoc = await client.collection(global.headCollection).doc(buildInfo[0].repoId).collection('tests').doc(firebaseEncode('a/1')).get();
+
+      assert(!testDoc.exists);
+
+      // make sure the repo doc is still there
+      const repoDoc = await client.collection(global.headCollection).doc(buildInfo[0].repoId).get();
+      assert(repoDoc.exists);
+    });
+
+    it('Can delete an entire repository', async () => {
+      await deleteRepo(client, decodeURIComponent(buildInfo[0].repoId));
+
+      // make sure the repo doc is still there
+      const repoDoc = await client.collection(global.headCollection).doc(buildInfo[0].repoId).get();
+      assert(!repoDoc.exists);
+    });
   });
 });

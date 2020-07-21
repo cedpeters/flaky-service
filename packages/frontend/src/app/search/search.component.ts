@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, OnInit, Output, NgZone} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {map, filter, debounceTime, switchMap} from 'rxjs/operators';
-import {InterpretationService} from '../services/interpretation/interpretation.service';
 import {
-  DefaultRepository,
-  Repository,
-  Search,
-} from '../services/search/interfaces';
+  InterpretationService,
+  expectedParams,
+} from '../services/interpretation/interpretation.service';
+import {Repository, Search} from '../services/search/interfaces';
 import {SearchService} from '../services/search/search.service';
+import {Router, NavigationEnd, ActivatedRoute} from '@angular/router';
+import {RouteProvider} from '../routing/route-provider/RouteProvider';
 
 @Component({
   selector: 'app-search',
@@ -33,31 +34,49 @@ export class SearchComponent implements OnInit {
 
   inputControl = new FormControl();
   options: Repository[] = [];
-  defaultOption: DefaultRepository = {
-    name: 'See all repositories',
-    organization: '',
-  };
   filteredOptions: Repository[];
   debounceTime = 200;
 
+  orgName = '';
+  showSearchBar = true;
+
   constructor(
     private searchService: SearchService,
-    private interpreter: InterpretationService
+    private interpreter: InterpretationService,
+    private ngZone: NgZone,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.filteredOptions = [this.defaultOption];
+    this.filteredOptions = [];
+    this.setupListeners();
+  }
+
+  private setupListeners() {
     this.inputControl.valueChanges
       .pipe(
         debounceTime(this.debounceTime),
         map(value => this.updateOptions(value)),
         filter(value => this.canBeAutoCompleted(value)),
-        switchMap(value => this.searchService.quickSearch(value))
+        switchMap(value => this.searchService.quickSearch(value, this.orgName))
       )
       .subscribe(newOptions => {
-        if (this.inputControl.value)
-          this.filteredOptions = newOptions.concat([this.defaultOption]);
+        if (this.inputControl.value) this.filteredOptions = newOptions;
       });
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => this.updateOrg());
+  }
+
+  private updateOrg() {
+    const route = this.route.root.firstChild.snapshot;
+    const foundParams = this.interpreter.parseRouteParam(
+      route.params,
+      expectedParams.get(RouteProvider.routes.main.name)
+    );
+    this.orgName = foundParams.queries.get(RouteProvider.routes.main.name);
+    this.showSearchBar = this.orgName !== '';
   }
 
   private canBeAutoCompleted(input: string): boolean {
@@ -66,19 +85,35 @@ export class SearchComponent implements OnInit {
 
   private updateOptions(value: string): string {
     if (!value || (value && value.toString().includes(' ')))
-      this.filteredOptions = [this.defaultOption];
+      this.filteredOptions = [];
     return value;
   }
 
   onEnterKeyUp(option: string): void {
-    this.searchOptionSelected.emit(this.interpreter.parse(option));
+    this.launchSearch(this.interpreter.parseSearchInput(option));
   }
 
   onSearchOptionSelected(option: string): void {
     this.inputControl.setValue(option);
-    const isADefaultOption = option === this.defaultOption.name;
-    if (isADefaultOption) this.inputControl.setValue('');
-    else this.searchOptionSelected.emit(this.interpreter.parse(option));
+    this.openRepo(option);
+  }
+
+  private launchSearch(option: Search): void {
+    this.ngZone.run(() => {
+      option.filters.push({name: 'repo', value: option.query});
+      const link = RouteProvider.routes.main.link(this.orgName);
+      this.router.navigate([
+        link,
+        this.interpreter.getRouteParam(option.filters),
+      ]);
+    });
+  }
+
+  private openRepo(repoName: string) {
+    this.ngZone.run(() => {
+      const link = RouteProvider.routes.repo.link(this.orgName, repoName);
+      this.router.navigateByUrl(link);
+    });
   }
 }
 

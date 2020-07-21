@@ -12,57 +12,70 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const { Firestore } = require('@google-cloud/firestore');
-
-const REPOSITORY_COLLECTION = 'repositories';
+const moment = require('moment');
+const client = require('./firestore.js');
 
 class Repository {
-  constructor (client) {
-    if (!client) {
-      this.client = new Firestore({
-        projectId: process.env.FLAKY_DB_PROJECT || 'flaky-dev-development'
-      });
-    } else {
-      this.client = client;
-    }
-  }
-
-  async create (identifier, params) {
+  async createDoc (identifier, params) {
     // TODO: DANGER we should have validation and what not at some point
     // before we do this, probably before this is called by the server too.
-    return this.client.collection(REPOSITORY_COLLECTION).doc(identifier).set(params);
+    return client.doc(identifier).set(params);
   }
 
-  async get (identifier) {
-    const document = await this.client.doc(`${REPOSITORY_COLLECTION}/${identifier}`).get();
-    // TODO: we actually need to call doc.exists and check if this doc exists.
+  async getDoc (identifier) {
+    const document = await client.doc(identifier).get();
+    if (!document.exists) {
+      return null;
+    }
     return document.data();
   }
 
   async getCollection (identifier) {
-    var result = [];
-    await this.client.collection(`${identifier}`).get()
-      .then(snapshot => {
-        if (snapshot.empty) {
-          console.log('No matching documents.');
-          return;
-        }
-
-        snapshot.forEach(doc => {
-          var entry = doc.data();
-          result.push(entry);
-        // console.log(doc.id, '=>',entry);
-        });
-      })
-      .catch(err => {
-        console.log('Error getting documents\n', err);
-      });
-
+    const result = [];
+    const snapshot = await client.collection(`${identifier}`).get();
+    if (snapshot.empty) {
+      return result;
+    }
+    snapshot.forEach(doc => {
+      const entry = doc.data();
+      result.push(entry);
+    });
     return result;
   }
 
-  async delete (identifier) {
-    const document = this.client.doc(`${REPOSITORY_COLLECTION}/${identifier}`);
+  async mayAccess (platform, login) {
+    const collection = client.collection('permitted-users/' + platform + '/users').where('login', '==', login);
+
+    const querySnapshot = await collection.get();
+    return (querySnapshot.size === 1);
+  }
+
+  async sessionPermissions (sessionID) {
+    const docRef = client.doc('express-sessions/' + sessionID);
+    const solution = { permitted: false, expiration: null, login: null };
+    const doc = await docRef.get();
+    let data;
+    try {
+      data = await JSON.parse(doc.data().data);
+    } catch (err) {
+      return solution;
+    }
+    if (doc.exists) {
+      const expiration = data.expires;
+      if (expiration == null) {
+        return solution;
+      }
+      if (moment().isBefore(moment(expiration))) {
+        solution.permitted = true;
+        solution.expiration = moment(expiration).format();
+        solution.login = data.user;
+      }
+    }
+    return solution;
+  }
+
+  async deleteDoc (path) {
+    const document = client.doc(path);
     return document.delete();
   }
 }

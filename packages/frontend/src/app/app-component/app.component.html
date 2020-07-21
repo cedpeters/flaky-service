@@ -15,30 +15,32 @@ limitations under the License.
 -->
 
 <div id="main-container">
-  <!--HEADER-->
   <mat-toolbar id="header">
-    <button mat-button (click)="snav.toggle()">
-      <mat-icon aria-hidden="false" aria-label="menu">menu</mat-icon>
-    </button>
-    <span id="title">{{ title }}</span>
     <span></span>
+    <span id="title">{{ title }}</span>
+    <span *ngIf="!showConfigWheel"></span>
+    <mat-icon matRipple aria-hidden="false" aria-label="menu" (click)="snav.toggle()" id="setting-button" *ngIf="showConfigWheel">settings</mat-icon>
   </mat-toolbar>
 
-
-  <!-- SIDE NAVBAR -->
   <mat-sidenav-container>
 
-    <mat-sidenav #snav mode="over" fixedTopGap="56">
-      <mat-nav-list>
-        <a mat-list-item routerLink=".">Login with GitHub</a>
-        <a mat-list-item routerLink=".">Help</a>
-        <a mat-list-item routerLink="/license">License</a>
-      </mat-nav-list>
+    <mat-sidenav #snav mode="over" fixedTopGap="56" position="end" (openedStart)="config.onConfigsOpening()">
+      <app-config #config></app-config>
     </mat-sidenav>
 
     <mat-sidenav-content>
+      <div id="fixed-header">
+        <app-breadcrumbs></app-breadcrumbs>
+  
+        <div id="search-bar">
+          <app-search></app-search>
+        </div>
+      </div>
+
       <!-- The routed views render in the <router-outlet>-->
-      <router-outlet></router-outlet>
+      <div id="router-container">
+        <router-outlet></router-outlet>
+      </div>
     </mat-sidenav-content>
 
   </mat-sidenav-container>

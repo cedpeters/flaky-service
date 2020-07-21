@@ -33,15 +33,42 @@ limitations under the License.
     flex: 1 0 auto;
 }
 
-#title {
-    position: relative;
-    right: 35px;
-}
-
 mat-sidenav-container {
     background-color: white;
     /* When the sidenav is fixed, don't constrain the height of the sidenav container.*/
     flex: 1 0 auto;
     margin-top: 56px;
     padding-top: 8px;
+}
+
+mat-sidenav {
+    padding-top: 10px;
+}
+
+#setting-button {
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+#search-bar {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    margin-top: 5px;
+}
+app-search {
+    width: 100%;
+    max-width: 300px;
+}
+
+#fixed-header {
+    position: fixed;
+    background-color: white;
+    width: 100%;
+    z-index: 2;
+    flex: 1 0 auto;
+}
+
+#router-container {
+    margin-top: 90px;
 }

@@ -16,7 +16,14 @@ import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {apiLinks} from './api';
 import {Observable} from 'rxjs';
-import {Search, Repository} from '../search/interfaces';
+import {
+  Search,
+  Repository,
+  ApiRepository,
+  Filter,
+  Tests,
+  SessionStatus,
+} from '../search/interfaces';
 
 @Injectable({
   providedIn: 'root',
@@ -25,10 +32,48 @@ export class COMService {
   constructor(private http: HttpClient) {}
 
   public fetchRepositories(search: Search): Observable<Repository[]> {
-    const params: HttpParams = new HttpParams().set('startswith', search.query);
-    search.filters.forEach(filter => params.set(filter.name, filter.value));
+    let params: HttpParams = new HttpParams().set('startswith', search.query);
+    search.filters.forEach(
+      filter => (params = params.set(filter.name, filter.value))
+    );
     return this.http.get<Repository[]>(apiLinks.get.repositories, {
       params: params,
     });
+  }
+
+  public fetchBuilds(
+    repoName: string,
+    orgName: string,
+    filters: Filter[]
+  ): Observable<ApiRepository> {
+    return this.http.get<ApiRepository>(
+      apiLinks.get.builds(repoName, orgName),
+      {params: this.getParams(filters)}
+    );
+  }
+
+  public fetchSessionStatus(): Observable<SessionStatus> {
+    return this.http.get<SessionStatus>(apiLinks.get.sessionStatus);
+  }
+
+  public fetchTests(repoName: string, orgName: string): Observable<Tests> {
+    return this.http.get<Tests>(apiLinks.get.tests(repoName, orgName));
+  }
+
+  public fetchRepository(
+    repoName: string,
+    orgName: string,
+    filters: Filter[]
+  ): Observable<Repository> {
+    return this.http.get<Repository>(
+      apiLinks.get.repository(repoName, orgName),
+      {params: this.getParams(filters)}
+    );
+  }
+
+  private getParams(filters: Filter[]) {
+    let params: HttpParams = new HttpParams();
+    filters.forEach(filter => (params = params.set(filter.name, filter.value)));
+    return params;
   }
 }

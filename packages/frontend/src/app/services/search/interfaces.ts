@@ -17,6 +17,10 @@ export interface DefaultRepository {
   organization: string;
 }
 
+interface Timestamp {
+  _seconds: number;
+}
+
 export interface Repository extends DefaultRepository {
   description?: string;
   flaky?: number;
@@ -24,6 +28,8 @@ export interface Repository extends DefaultRepository {
   repoId?: string;
   numtestcases?: number;
   url?: string;
+  environments?: BuildEnvironment;
+  lastupdate?: Timestamp;
 }
 
 export interface Filter {
@@ -34,4 +40,50 @@ export interface Filter {
 export interface Search {
   filters: Filter[];
   query: string;
+}
+
+export interface Tests {
+  tests: Test[];
+}
+
+export interface Test {
+  name: string;
+  flaky: boolean;
+  passed: boolean;
+  searchindex: number;
+  lifetimefailcount: number;
+  lifetimepasscount: number;
+  percentpassing: number;
+  environments?: BuildEnvironment;
+  lastupdate: {_seconds: number; _nanoseconds: number};
+}
+
+export interface BuildEnvironment {
+  os: string;
+  environment?: string;
+  ref?: string;
+  tag?: string;
+}
+
+export interface Build {
+  buildId: string;
+  environment: BuildEnvironment;
+  flaky: number;
+  timestamp: Timestamp;
+  percentpassing: number;
+  successes?: string[];
+  tests?: Test[];
+  failcount: number;
+  passcount: number;
+}
+
+export interface ApiRepository {
+  metadata: Repository;
+  builds: Build[];
+}
+
+export interface SessionStatus {
+  permitted: boolean;
+  expiration?: Date;
+  login?: string;
 }

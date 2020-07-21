@@ -12,44 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Component, OnInit, Input, ViewChild} from '@angular/core';
-import {PageEvent, MatPaginator} from '@angular/material/paginator';
+import {Component, Input, ViewChild} from '@angular/core';
+import {MatPaginator} from '@angular/material/paginator';
 import {Repository} from 'src/app/services/search/interfaces';
+import {PaginatedListComponent} from 'src/app/paginated-list/paginated-list.component';
+import * as moment from 'moment';
 
 @Component({
   selector: 'app-repo-list',
   templateUrl: './repo-list.component.html',
   styleUrls: ['./repo-list.component.css'],
 })
-export class RepoListComponent implements OnInit {
+export class RepoListComponent extends PaginatedListComponent<Repository> {
   @ViewChild('paginator') paginator: MatPaginator;
-
-  _repositories: Repository[] = [];
   @Input() set repositories(value: Repository[]) {
-    this._repositories = value;
+    this._elements = value;
     this.updatePage();
     this.paginator?.firstPage();
   }
 
-  renderedRepositories: Repository[] = [];
-  pageIndex = 0;
-  pageSize = 10;
-
-  ngOnInit(): void {
-    this.updatePage();
-  }
-
-  updatePage(page?: PageEvent): void {
-    const startIndex: number = page
-      ? page.pageIndex * page.pageSize
-      : this.pageIndex * this.pageSize;
-    const endIndex: number =
-      startIndex + (page ? page.pageSize : this.pageSize);
-
-    if (page) {
-      this.pageIndex = page.pageIndex;
-      this.pageSize = page.pageSize;
-    }
-    this.renderedRepositories = this._repositories.slice(startIndex, endIndex);
+  getLastUpdate(repo: Repository) {
+    return moment.unix(repo.lastupdate._seconds).format('MMM D, YYYY');
   }
 }

@@ -14,12 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<!-- SEARCH BAR -->
-<div id="search-bar">
-    <app-search (searchOptionSelected)="onSearchOptionSelected($event)"></app-search>
-</div>
-
 <!-- REPOSITORIES LIST -->
 <div class="repo-list-container">
-    <app-repo-list [repositories]="searchService.repositories"></app-repo-list>
+    <app-repo-list [repositories]="repositories" *ngIf="!loading && repositories.length"></app-repo-list>
+    <mat-spinner *ngIf="loading" [strokeWidth]="5" id="spinner"></mat-spinner>
+    <p id="no-repo-found" *ngIf="!repositories.length && !loading">
+        No repository found in {{orgName}}
+    </p>
 </div>
+
+
+<!-- LICENSE BUTTON-->
+<footer id="license-footer">
+    <a color="primary" id="license-button" (click)="openLicenseDialog()">© 2020 Google, LLC.</a>
+</footer>

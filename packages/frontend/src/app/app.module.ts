@@ -15,7 +15,7 @@
 import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
 
-import {AppRoutingModule} from './app-routing.module';
+import {AppRoutingModule} from './routing/app-routing.module';
 import {AppComponent} from './app-component/app.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {HttpClientModule} from '@angular/common/http';
@@ -23,11 +23,12 @@ import {ReactiveFormsModule} from '@angular/forms';
 
 import {A11yModule} from '@angular/cdk/a11y';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {MatBottomSheetModule} from '@angular/material/bottom-sheet';
 import {MatButtonModule} from '@angular/material/button';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCardModule} from '@angular/material/card';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatExpansionModule} from '@angular/material/expansion';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatListModule} from '@angular/material/list';
@@ -35,6 +36,7 @@ import {MatMenuModule} from '@angular/material/menu';
 import {MatRippleModule} from '@angular/material/core';
 import {MatPaginatorModule} from '@angular/material/paginator';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import {MatSelectModule} from '@angular/material/select';
 import {MatSidenavModule} from '@angular/material/sidenav';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatToolbarModule} from '@angular/material/toolbar';
@@ -43,8 +45,15 @@ import {HomeComponent} from './home/home.component';
 import {SearchComponent} from './search/search.component';
 import {LicenseComponent} from './license/license.component';
 import {MainComponent} from './main/main.component';
-import {SingleRepositoryComponent} from './single-repository/single-repository.component';
 import {RepoListComponent} from './main/repo-list/repo-list.component';
+import {ConfigComponent} from './app-component/config/config.component';
+import {FormsModule} from '@angular/forms';
+import {RepositoryComponent} from './repository/repository.component';
+import {BuildComponent} from './build/build.component';
+import {TestsListComponent} from './repository/tests-list/tests-list.component';
+import {TestDetailsComponent} from './repository/tests-list/test-details/test-details.component';
+import {FiltersComponent} from './filters/filters.component';
+import {BreadcrumbsComponent} from './breadcrumbs/breadcrumbs.component';
 
 @NgModule({
   declarations: [
@@ -53,8 +62,14 @@ import {RepoListComponent} from './main/repo-list/repo-list.component';
     SearchComponent,
     LicenseComponent,
     MainComponent,
-    SingleRepositoryComponent,
+    RepositoryComponent,
     RepoListComponent,
+    ConfigComponent,
+    BuildComponent,
+    TestsListComponent,
+    TestDetailsComponent,
+    FiltersComponent,
+    BreadcrumbsComponent,
   ],
   imports: [
     BrowserModule,
@@ -64,11 +79,12 @@ import {RepoListComponent} from './main/repo-list/repo-list.component';
     ReactiveFormsModule,
     A11yModule,
     MatAutocompleteModule,
-    MatBottomSheetModule,
     MatButtonModule,
     MatButtonToggleModule,
+    MatCardModule,
     MatDialogModule,
     MatDividerModule,
+    MatExpansionModule,
     MatIconModule,
     MatInputModule,
     MatListModule,
@@ -76,10 +92,12 @@ import {RepoListComponent} from './main/repo-list/repo-list.component';
     MatPaginatorModule,
     MatProgressSpinnerModule,
     MatRippleModule,
+    MatSelectModule,
     MatSidenavModule,
     MatSnackBarModule,
     MatToolbarModule,
     MatTooltipModule,
+    FormsModule,
   ],
   entryComponents: [LicenseComponent],
   providers: [],

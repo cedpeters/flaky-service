@@ -14,9 +14,9 @@
 // limitations under the License.
 
 const { describe, before, after, it } = require('mocha');
-const { Firestore } = require('@google-cloud/firestore');
 const { v4: uuidv4 } = require('uuid');
 const firebaseEncode = require('../lib/firebase-encode');
+const client = require('../src/firestore.js');
 
 const assert = require('assert');
 const fetch = require('node-fetch');
@@ -36,12 +36,9 @@ const data = [
 ];
 
 describe('Getting Repos and Orgs', () => {
-  let client;
   before(async () => {
-    client = new Firestore({
-      projectId: process.env.FLAKY_DB_PROJECT || 'flaky-dev-development'
-    });
     global.headCollection = 'repositories-testsuite-' + uuidv4();
+    global.headCollection += '/allinfo/repositories';
 
     for (let k = 0; k < data.length; k++) {
       const repo = data[k];
@@ -60,7 +57,7 @@ describe('Getting Repos and Orgs', () => {
   });
 
   it('should respond with an empty list with random queries', async () => {
-    const resp = await fetch('http://localhost:3000/api/repo?startswith=randomquery');
+    const resp = await fetch('http://localhost:3000/api/repo?org=ddd&startswith=randomquery');
     const respText = await resp.text();
     assert.strictEqual(JSON.parse(respText).length, 0);
 
@@ -70,20 +67,14 @@ describe('Getting Repos and Orgs', () => {
     assert.strictEqual(JSON.parse(respTextOrg).length, 0);
   });
 
-  it('should filter out duplicates', async () => {
-    const resp = await fetch('http://localhost:3000/api/repo?startswith=aaa');
-    const respText = await resp.text();
-    assert.strictEqual(JSON.parse(respText).length, 3);
-  });
-
-  it('should return all results no matter the preceding characters', async () => {
-    const resp = await fetch('http://localhost:3000/api/repo?startswith=z');
+  it('should return all results no matter the next characters', async () => {
+    const resp = await fetch('http://localhost:3000/api/repo?org=bigorg&startswith=z');
     const respText = await resp.text();
     assert.strictEqual(JSON.parse(respText).length, 4);
   });
 
   it('should not work with a name too long', async () => {
-    const resp = await fetch('http://localhost:3000/api/repo?startswith=aaanamelengthen');
+    const resp = await fetch('http://localhost:3000/api/repo?org=aaa&startswith=aaanamelengthen');
     const respText = await resp.text();
     assert.strictEqual(JSON.parse(respText).length, 0);
   });
@@ -95,31 +86,23 @@ describe('Getting Repos and Orgs', () => {
   });
 
   it('limit search (only on repos)', async () => {
-    const resp = await fetch('http://localhost:3000/api/repo?startswith=z&limit=3');
+    const resp = await fetch('http://localhost:3000/api/repo?org=bigorg&startswith=z&limit=3');
     const respText = await resp.text();
     assert.strictEqual(JSON.parse(respText).length, 3);
   });
 
-  it('should be able to search by org/beginning of name', async () => {
-    const querySuffixes = ['bigor', 'bigorg', 'bigorg%2F', 'bigorg%2Fz'];
-    for (let t = 0; t < querySuffixes.length; t++) {
-      const resp = await fetch('http://localhost:3000/api/repo?startswith=' + querySuffixes[t]);
-      const respText = await resp.text();
-      assert.strictEqual(JSON.parse(respText).length, 4);
-    }
-  });
-  it('should return all with no parameter', async () => {
-    const resp = await fetch('http://localhost:3000/api/repo');
+  it('should return all with no startswith', async () => {
+    const resp = await fetch('http://localhost:3000/api/repo?org=bigorg');
     const respText = await resp.text();
-    assert.strictEqual(JSON.parse(respText).length, data.length);
+    assert.strictEqual(JSON.parse(respText).length, 4);
   });
 
   it('should work with case insensitive', async () => {
-    const resp = await fetch('http://localhost:3000/api/repo?startswith=upper');
+    const resp = await fetch('http://localhost:3000/api/repo?org=upper&startswith=upper');
     const respText = await resp.text();
     assert.strictEqual(JSON.parse(respText).length, 1);
 
-    const resp2 = await fetch('http://localhost:3000/api/repo?startswith=LOWER');
+    const resp2 = await fetch('http://localhost:3000/api/repo?org=LOWER&startswith=LOWER');
     const respText2 = await resp2.text();
 
     assert.strictEqual(JSON.parse(respText2).length, 1);

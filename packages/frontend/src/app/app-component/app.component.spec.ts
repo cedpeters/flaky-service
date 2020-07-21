@@ -20,8 +20,29 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatSidenavModule} from '@angular/material/sidenav';
 import {MatListModule} from '@angular/material/list';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {Component} from '@angular/core';
+
+// Mock the inner components
+
+@Component({
+  selector: 'app-config',
+})
+class ConfigComponent {}
+
+@Component({
+  selector: 'app-breadcrumbs',
+})
+class BreadcrumbsComponent {}
+
+@Component({
+  selector: 'app-search',
+})
+class SearchComponent {}
 
 describe('AppComponent', () => {
+  let fixture;
+  let app: AppComponent;
+
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       imports: [
@@ -32,13 +53,19 @@ describe('AppComponent', () => {
         MatSidenavModule,
         MatListModule,
       ],
-      declarations: [AppComponent],
+      declarations: [
+        AppComponent,
+        BreadcrumbsComponent,
+        SearchComponent,
+        ConfigComponent,
+      ],
     }).compileComponents();
+
+    fixture = TestBed.createComponent(AppComponent);
+    app = fixture.componentInstance;
   }));
 
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
 });
