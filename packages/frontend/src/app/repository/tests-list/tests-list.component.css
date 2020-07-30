@@ -116,11 +116,11 @@ limitations under the License.
 .indicator {
     padding-right: 6px;
 }
-.show-yellow {
-    color: orange;
-}
 .show-green {
     color:#009a06;
+}
+.show-red {
+    color: red;
 }
 
 .test-details{
