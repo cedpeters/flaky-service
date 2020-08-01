@@ -36,8 +36,12 @@ export class FiltersComponent {
 
   constructor(private utils: UtilsService) {}
 
-  setFilters(filtersObj: object, savedSelection?: Filter[]) {
-    this._filters = this.getFilters(filtersObj);
+  setFilters(
+    filtersObj: object,
+    savedSelection?: Filter[],
+    useDefaultOptions?: boolean
+  ) {
+    this._filters = this.getFilters(filtersObj, useDefaultOptions);
     this.sortFilters();
     this.resizeFilters();
     this.restoreSavedSelection(savedSelection);
@@ -62,20 +66,29 @@ export class FiltersComponent {
     );
   }
 
-  private getFilters(filtersObject: object): AvailableFilter[] {
+  private getFilters(
+    filtersObject: object,
+    useDefaultOptions?: boolean
+  ): AvailableFilter[] {
     const filters: AvailableFilter[] = [];
     Object.keys(filtersObject).forEach(filterName => {
       filters.push({
         name: filterName,
-        possibleValues: this.getPossibleValues(filtersObject[filterName]),
+        possibleValues: this.getPossibleValues(
+          filtersObject[filterName],
+          useDefaultOptions
+        ),
         selection: '',
       });
     });
     return filters;
   }
 
-  private getPossibleValues(providedOptions: string[] | Option[]): Option[] {
-    const options: Option[] = [this.defaultOption];
+  private getPossibleValues(
+    providedOptions: string[] | Option[],
+    useDefaultOptions?: boolean
+  ): Option[] {
+    const options: Option[] = useDefaultOptions ? [this.defaultOption] : [];
 
     providedOptions.forEach(option => {
       if (typeof option === 'string') {
