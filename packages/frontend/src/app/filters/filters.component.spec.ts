@@ -98,12 +98,16 @@ describe('FiltersComponent', () => {
       const expectedFilters = [
         {
           name: 'matrix',
-          possibleValues: [{value: '{"Node": 12}', visibleValue: 'Node 12'}],
+          possibleValues: [
+            component.defaultOption,
+            {value: '{"Node": 12}', visibleValue: 'Node 12'},
+          ],
           selection: '',
         },
         {
           name: 'ref',
           possibleValues: [
+            component.defaultOption,
             {value: 'master', visibleValue: 'master'},
             {value: 'dev', visibleValue: 'develop'},
           ],
@@ -121,9 +125,9 @@ describe('FiltersComponent', () => {
     it('should alphabetically sort the provided filters', () => {
       const newFilters = {c: [], b: [], a: []};
       const expectedFilters = [
-        {name: 'a', possibleValues: [], selection: ''},
-        {name: 'b', possibleValues: [], selection: ''},
-        {name: 'c', possibleValues: [], selection: ''},
+        {name: 'a', possibleValues: [component.defaultOption], selection: ''},
+        {name: 'b', possibleValues: [component.defaultOption], selection: ''},
+        {name: 'c', possibleValues: [component.defaultOption], selection: ''},
       ];
 
       component.setFilters(newFilters);
@@ -159,9 +163,9 @@ describe('FiltersComponent', () => {
     it('should alphabetically sort the provided filters after limiting their size', () => {
       const newFilters = {c: [], b: [], a: [], f: [], d: []};
       const expectedFilters = [
-        {name: 'a', possibleValues: [], selection: ''},
-        {name: 'b', possibleValues: [], selection: ''},
-        {name: 'c', possibleValues: [], selection: ''},
+        {name: 'a', possibleValues: [component.defaultOption], selection: ''},
+        {name: 'b', possibleValues: [component.defaultOption], selection: ''},
+        {name: 'c', possibleValues: [component.defaultOption], selection: ''},
       ];
       component.maxOptions = expectedFilters.length;
 
@@ -187,6 +191,7 @@ describe('FiltersComponent', () => {
         {
           name: 'filter1',
           possibleValues: [
+            component.defaultOption,
             {value: 'val1', visibleValue: 'val1'},
             {value: 'val2', visibleValue: 'val2'},
           ],
@@ -195,6 +200,7 @@ describe('FiltersComponent', () => {
         {
           name: 'filter2',
           possibleValues: [
+            component.defaultOption,
             {value: 'val1', visibleValue: 'val1'},
             {value: 'val2', visibleValue: 'val2'},
           ],
@@ -203,6 +209,7 @@ describe('FiltersComponent', () => {
         {
           name: 'filter3',
           possibleValues: [
+            component.defaultOption,
             {value: 'val1', visibleValue: 'val1'},
             {value: 'val2', visibleValue: 'val2'},
           ],
