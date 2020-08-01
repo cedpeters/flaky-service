@@ -22,11 +22,8 @@ import {UtilsService} from '../services/utils.service';
   styleUrls: ['./filters.component.css'],
 })
 export class FiltersComponent {
-  readonly defaultOption: Option = {
-    value: '',
-    visibleValue: '',
-  };
   _filters: AvailableFilter[] = [];
+  @Input() showDefaultOption = true;
   @Input() maxOptions = 3;
   @Output() filtersChanged = new EventEmitter<Filter[]>();
 
@@ -36,12 +33,8 @@ export class FiltersComponent {
 
   constructor(private utils: UtilsService) {}
 
-  setFilters(
-    filtersObj: object,
-    savedSelection?: Filter[],
-    useDefaultOptions?: boolean
-  ) {
-    this._filters = this.getFilters(filtersObj, useDefaultOptions);
+  setFilters(filtersObj: object, savedSelection?: Filter[]) {
+    this._filters = this.getFilters(filtersObj);
     this.sortFilters();
     this.resizeFilters();
     this.restoreSavedSelection(savedSelection);
@@ -66,29 +59,20 @@ export class FiltersComponent {
     );
   }
 
-  private getFilters(
-    filtersObject: object,
-    useDefaultOptions?: boolean
-  ): AvailableFilter[] {
+  private getFilters(filtersObject: object): AvailableFilter[] {
     const filters: AvailableFilter[] = [];
     Object.keys(filtersObject).forEach(filterName => {
       filters.push({
         name: filterName,
-        possibleValues: this.getPossibleValues(
-          filtersObject[filterName],
-          useDefaultOptions
-        ),
+        possibleValues: this.getPossibleValues(filtersObject[filterName]),
         selection: '',
       });
     });
     return filters;
   }
 
-  private getPossibleValues(
-    providedOptions: string[] | Option[],
-    useDefaultOptions?: boolean
-  ): Option[] {
-    const options: Option[] = useDefaultOptions ? [this.defaultOption] : [];
+  private getPossibleValues(providedOptions: string[] | Option[]): Option[] {
+    const options: Option[] = [];
 
     providedOptions.forEach(option => {
       if (typeof option === 'string') {
