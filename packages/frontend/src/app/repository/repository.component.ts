@@ -79,7 +79,8 @@ export class RepositoryComponent implements AfterViewInit {
         .subscribe(repository => {
           this.filterComponent?.setFilters(
             repository.environments,
-            foundParams.filters
+            foundParams.filters,
+            true
           );
         });
     });
