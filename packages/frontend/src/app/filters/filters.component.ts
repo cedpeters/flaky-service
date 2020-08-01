@@ -22,9 +22,9 @@ import {UtilsService} from '../services/utils.service';
   styleUrls: ['./filters.component.css'],
 })
 export class FiltersComponent {
-  readonly defaultOption = {
-    value: 'All',
-    visibleValue: 'All',
+  readonly defaultOption: Option = {
+    value: '',
+    visibleValue: '',
   };
   _filters: AvailableFilter[] = [];
   @Input() maxOptions = 3;
@@ -75,7 +75,7 @@ export class FiltersComponent {
   }
 
   private getPossibleValues(providedOptions: string[] | Option[]): Option[] {
-    const options: Option[] = [];
+    const options: Option[] = [this.defaultOption];
 
     providedOptions.forEach(option => {
       if (typeof option === 'string') {
