@@ -1,17 +1,41 @@
 [//]: # "This README.md file is auto-generated, all changes to this file will be lost."
 [//]: # "To regenerate it, use `python -m synthtool`."
-<img src="https://avatars2.githubusercontent.com/u/2810941?v=3&s=96" alt="Google Cloud Platform logo" title="Google Cloud Platform" align="right" height="96" width="96"/>
-
-# [flaky.dev: a flaky test identification service](https://github.com/google/flaky-service)
 
 [![release level](https://img.shields.io/badge/release%20level-beta-yellow.svg?style=flat)](https://cloud.google.com/terms/launch-stages)
 [![npm version](https://img.shields.io/npm/v/flaky-service.svg)](https://www.npmjs.org/package/flaky-service)
 [![codecov](https://img.shields.io/codecov/c/github/google/flaky-service/master.svg?style=flat)](https://codecov.io/gh/google/flaky-service)
 
+<img src="https://avatars2.githubusercontent.com/u/2810941?v=3&s=96" alt="Google Cloud Platform logo" title="Google Cloud Platform" align="right" height="96" width="96"/>
 
-* [github.com/google/flaky-service](https://github.com/google/flaky-service)
+# [flaky.dev: a flaky test identification service](https://github.com/GoogleCloudPlatform/flaky-service)
 
-## Quickstart
+### flaky.dev
+Flaky.dev is a powerful test tracking sevice that can call out [flaky tests](https://hackernoon.com/flaky-tests-a-war-that-never-ends-9aa32fdef359).
+
+### How it works
+Your repository sends build data to an API that tracks your tests.
+
+### Getting started
+2 things to do:
+
+#### 1: Produce test reports in the TAP format.
+
+This can certainly be easily done in your [favorite framework](https://www.npmjs.com/search?q=TAP+reporter).
+
+#### 2: Wire up your repository to flaky.dev.
+##### With GitHub actions
+Simply add this step at the end of the job(s) that run(s) your tests.
+```
+- name: track flaky tests
+  if: ${{ always() }}
+  uses: GoogleCloudPlatform/flaky-service/packages/action@v1.0.0
+  with:
+    github: ${{toJson(github)}}
+    matrix: ${{toJson(matrix)}}
+    os: ${{toJson(runner)}}
+    logtype: TAP
+    filepath: ${{github.workspace}}/test.tap
+```
 
 ## Developing
 
