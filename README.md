@@ -10,13 +10,13 @@
 # [flaky.dev: a flaky test identification service](https://github.com/GoogleCloudPlatform/flaky-service)
 
 ### flaky.dev
-Flaky.dev is a powerful test tracking sevice that can call out [flaky tests](https://hackernoon.com/flaky-tests-a-war-that-never-ends-9aa32fdef359).
+Flaky.dev is a powerful test tracking service that helps you manage [flaky tests](https://hackernoon.com/flaky-tests-a-war-that-never-ends-9aa32fdef359).
 
 ### How it works
 Your repository sends build data to an API that tracks your tests.
 
 ### Getting started
-2 things to do:
+There are two things you need to configure to start sending test data to flaky.dev:
 
 #### 1: Produce test reports in the TAP format.
 
