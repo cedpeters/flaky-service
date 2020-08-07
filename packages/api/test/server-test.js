@@ -35,7 +35,7 @@ describe('flaky express server', () => {
   });
 
   it('should have the mocked environment variables', () => {
-    assert(true);
+    assert(false);
   });
 
   describe('delete /repo', async () => {
