@@ -21,4 +21,7 @@ describe('flaky express server', () => {
   it('is true', () => {
     assert(true);
   });
+  it('is also true', () => {
+    assert(false);
+  });
 });
